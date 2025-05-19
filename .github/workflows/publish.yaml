@@ -1,0 +1,17 @@
+name: Publish Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      -  uses: actions/checkout@v3
+      -  name: Publish
+         run: |
+           docker login --username ${{ secrets.GHCR_USER }} --password ${{ secrets.GHCR_TOKEN }} ghcr.io
+           docker build . --tag ghcr.io/${{ GHCR_USER }}/brewapi:latest
+           docker push ghcr.io/${{ GHCR_USER }}/brewapi:latest
