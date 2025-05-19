@@ -13,5 +13,5 @@ jobs:
       -  name: Publish
          run: |
            docker login --username ${{ secrets.GHCR_USER }} --password ${{ secrets.GHCR_TOKEN }} ghcr.io
-           docker build . --tag ghcr.io/${{ GHCR_USER }}/brewapi:latest
-           docker push ghcr.io/${{ GHCR_USER }}/brewapi:latest
+           docker build . --tag ghcr.io/${{ secrets.GHCR_USER }}/brewapi:latest
+           docker push ghcr.io/${{ secrets.GHCR_USER }}/brewapi:latest
