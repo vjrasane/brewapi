@@ -11,9 +11,10 @@ app.onBeforeHandle(async ({ query }) => {
   }
 })
 
-app.all("/api/v1/data", ({ body, headers }) => {
+app.all("/api/v1/data", ({ request, body, headers }) => {
   console.log("----- REQUEST -----");
   console.log(new Date().toISOString());
+  console.log(request.method)
   console.log("----- HEADERS -----");
   console.log(headers);
   console.log("----- BODY -----");
