@@ -1,4 +1,4 @@
-import { Elysia, status, t } from "elysia";
+import { Elysia, t } from "elysia";
 import { Gauge, register } from "prom-client";
 
 const { API_KEY } = process.env;
@@ -28,6 +28,12 @@ const gravity = new Gauge({
 
 app.guard({
   body: BrewData,
+  beforeHandle: ({ set, query }) => {
+    const { apiKey } = query;
+    if (apiKey !== API_KEY) {
+      return (set.status = 'Unauthorized')
+    }
+  }
 }).post("/api/v1/data", ({ request, body, headers }) => {
   console.log("----- REQUEST -----");
   console.log(new Date().toISOString());
@@ -42,13 +48,6 @@ app.guard({
 
   return {
     status: "ok"
-  }
-}, {
-  beforeHandle: ({ set, query }) => {
-    const { apiKey } = query;
-    if (apiKey !== API_KEY) {
-      return (set.status = 'Unauthorized')
-    }
   }
 })
 
