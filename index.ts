@@ -21,7 +21,13 @@ const BrewData = t.Object({
 
 type BrewData = typeof BrewData.static;
 
-let cache: (BrewData & { time: Date })[] = []
+const BrewDataPoint = t.Intersect([BrewData, t.Object({
+  time: t.Date(),
+})])
+
+type BrewDataPoint = typeof BrewDataPoint.static;
+
+let cache: BrewDataPoint[] = []
 
 app.guard({
   body: BrewData,
@@ -48,13 +54,13 @@ app.guard({
 })
 
 app.guard({
-  response: t.Array(BrewData),
+  response: t.Array(BrewDataPoint),
 }).get("/api/v1/data", () => {
   return cache
 })
 
 app.guard({
-  response: t.Union([BrewData, t.Null()])
+  response: t.Union([BrewDataPoint, t.Null()])
 }).get("/api/v1/data/last", () => {
   return cache[cache.length - 1] ?? null
 })
