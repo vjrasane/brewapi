@@ -1,6 +1,7 @@
 import { Elysia, status, t } from "elysia";
+import { Gauge, register } from "prom-client";
 
-const { API_KEY, CACHE_MAX_AGE_SECONDS = 3600 * 24 } = process.env;
+const { API_KEY } = process.env;
 
 const app = new Elysia()
 
@@ -11,7 +12,6 @@ app.onBeforeHandle(async ({ query }) => {
   }
 })
 
-
 const BrewData = t.Object({
   name: t.String(),
   temp: t.Number(),
@@ -21,13 +21,17 @@ const BrewData = t.Object({
 
 type BrewData = typeof BrewData.static;
 
-const BrewDataPoint = t.Intersect([BrewData, t.Object({
-  time: t.Date(),
-})])
+const temperature = new Gauge({
+  name: "brew_temperature",
+  help: "Temperature of the brew",
+  labelNames: ["brew_name", "unit"]
+})
 
-type BrewDataPoint = typeof BrewDataPoint.static;
-
-let cache: BrewDataPoint[] = []
+const gravity = new Gauge({
+  name: "brew_gravity",
+  help: "Specific gravity of the brew",
+  labelNames: ["brew_name"]
+})
 
 app.guard({
   body: BrewData,
@@ -40,29 +44,19 @@ app.guard({
   console.log("----- BODY -----");
   console.log(body)
   console.log("----- END -----");
+  temperature.set({ brew_name: body.name, unit: body.temp_unit }, body.temp);
+  gravity.set({ brew_name: body.name }, body.gravity);
 
-  const now = new Date();
-  const data = {
-    ...body,
-    time: now,
+  return {
+    status: "ok"
   }
+})
 
-  cache = [...cache, data].filter((item) => {
-    const diff = (item.time.getTime() - now.getTime()) / 1000;
-    return diff < +CACHE_MAX_AGE_SECONDS;
+app.get("/metrics", async () => {
+  const metrics = await register.metrics();
+  return new Response(metrics, {
+    headers: { 'Content-Type': register.contentType },
   })
-})
-
-app.guard({
-  response: t.Array(BrewDataPoint),
-}).get("/api/v1/data", () => {
-  return cache
-})
-
-app.guard({
-  response: t.Union([BrewDataPoint, t.Null()])
-}).get("/api/v1/data/last", () => {
-  return cache[cache.length - 1] ?? null
 })
 
 app.listen(3000);

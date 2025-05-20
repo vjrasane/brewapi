@@ -6,7 +6,8 @@
     "dev": "bun run --watch index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "elysia": "latest",
+    "prom-client": "^15.1.3"
   },
   "devDependencies": {
     "bun-types": "latest"
