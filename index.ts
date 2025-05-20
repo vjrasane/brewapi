@@ -26,12 +26,7 @@ const gravity = new Gauge({
   labelNames: ["brew_name"]
 })
 
-app.onBeforeHandle(async ({ query }) => {
-  const { apiKey } = query;
-  if (apiKey !== API_KEY) {
-    return status(401);
-  }
-}).guard({
+app.guard({
   body: BrewData,
 }).post("/api/v1/data", ({ request, body, headers }) => {
   console.log("----- REQUEST -----");
@@ -47,6 +42,13 @@ app.onBeforeHandle(async ({ query }) => {
 
   return {
     status: "ok"
+  }
+}, {
+  beforeHandle: ({ set, query }) => {
+    const { apiKey } = query;
+    if (apiKey !== API_KEY) {
+      return (set.status = 'Unauthorized')
+    }
   }
 })
 
