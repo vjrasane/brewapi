@@ -26,30 +26,33 @@ const gravity = new Gauge({
   labelNames: ["brew_name"]
 })
 
-app.guard({
-  body: BrewData,
-  beforeHandle: ({ set, query }) => {
-    const { apiKey } = query;
-    if (apiKey !== API_KEY) {
-      return (set.status = 'Unauthorized')
-    }
-  }
-}).post("/api/v1/data", ({ request, body, headers }) => {
-  console.log("----- REQUEST -----");
-  console.log(new Date().toISOString());
-  console.log(request.method)
-  console.log("----- HEADERS -----");
-  console.log(headers);
-  console.log("----- BODY -----");
-  console.log(body)
-  console.log("----- END -----");
-  temperature.set({ brew_name: body.name, unit: body.temp_unit }, body.temp);
-  gravity.set({ brew_name: body.name }, body.gravity);
+app.group("/api/v1", (app) =>
+  app.post("/data", ({ request, body, headers }) => {
+    console.log("----- REQUEST -----");
+    console.log(new Date().toISOString());
+    console.log(request.method)
+    console.log("----- HEADERS -----");
+    console.log(headers);
+    console.log("----- BODY -----");
+    console.log(body)
+    console.log("----- END -----");
 
-  return {
-    status: "ok"
-  }
-})
+    temperature.set({ brew_name: body.name, unit: body.temp_unit }, body.temp);
+    gravity.set({ brew_name: body.name }, body.gravity);
+
+    return {
+      status: "ok"
+    }
+  }, {
+    body: BrewData,
+    beforeHandle: ({ set, query }) => {
+      const { apiKey } = query;
+      if (apiKey !== API_KEY) {
+        return (set.status = 'Unauthorized')
+      }
+    }
+  }))
+
 
 app.get("/metrics", async () => {
   const metrics = await register.metrics();
