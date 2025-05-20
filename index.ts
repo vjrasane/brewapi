@@ -5,13 +5,6 @@ const { API_KEY } = process.env;
 
 const app = new Elysia()
 
-app.onBeforeHandle(async ({ query }) => {
-  const { apiKey } = query;
-  if (apiKey !== API_KEY) {
-    return status(401);
-  }
-})
-
 const BrewData = t.Object({
   name: t.String(),
   temp: t.Number(),
@@ -33,7 +26,12 @@ const gravity = new Gauge({
   labelNames: ["brew_name"]
 })
 
-app.guard({
+app.onBeforeHandle(async ({ query }) => {
+  const { apiKey } = query;
+  if (apiKey !== API_KEY) {
+    return status(401);
+  }
+}).guard({
   body: BrewData,
 }).post("/api/v1/data", ({ request, body, headers }) => {
   console.log("----- REQUEST -----");
