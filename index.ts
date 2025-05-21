@@ -1,7 +1,15 @@
 import { Elysia, t } from "elysia";
 import { Gauge, register } from "prom-client";
+import { createDb, upsertLatestBrew } from "./sqlite";
 
-const { API_KEY } = process.env;
+const {
+  API_KEY,
+  SQLITE_DB = "/data/brewapi.sqlite",
+  OG_RESET_TRESHOLD = 0.02,
+  DEFAULT_OG,
+} = process.env;
+
+const db = createDb(SQLITE_DB);
 
 const app = new Elysia()
 
@@ -26,6 +34,12 @@ const gravity = new Gauge({
   labelNames: ["brew_name"]
 })
 
+const abv = new Gauge({
+  name: "brew_abv",
+  help: "Alcohol by volume of the brew",
+  labelNames: ["brew_name", "unit"]
+})
+
 app.group("/api/v1", (app) =>
   app.post("/data", ({ request, body, headers }) => {
     console.log("----- REQUEST -----");
@@ -37,8 +51,11 @@ app.group("/api/v1", (app) =>
     console.log(body)
     console.log("----- END -----");
 
+    const brew = upsertLatestBrew(db, body.name, body.gravity, +(DEFAULT_OG ?? body.gravity), +OG_RESET_TRESHOLD);
+
     temperature.set({ brew_name: body.name, unit: body.temp_unit }, body.temp);
     gravity.set({ brew_name: body.name }, body.gravity);
+    abv.set({ brew_name: body.name, unit: "%" }, (brew.og - body.gravity) * 131.25);
 
     return {
       status: "ok"
