@@ -16,12 +16,17 @@ COPY . .
 
 FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
-COPY --from=prerelease /usr/src/app/index.ts .
+COPY --from=prerelease /usr/src/app/src src 
 COPY --from=prerelease /usr/src/app/package.json .
 
 LABEL org.opencontainers.image.source='https://github.com/vjrasane/brewapi' \
     org.opencontainers.image.description='Elysia server for receiving brewing data'
 
+RUN mkdir -p /data
+RUN chown -R bun:root /data
+
 USER bun
+
 EXPOSE 3000/tcp
-ENTRYPOINT [ "bun", "run", "index.ts" ]
+
+ENTRYPOINT [ "bun", "run", "src/index.ts" ]

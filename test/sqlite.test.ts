@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { beforeEach, expect, test } from "bun:test";
-import { createDb, upsertLatestBrew } from "../sqlite";
+import { createDb, upsertLatestBrew } from "../src/sqlite";
 
 let db: Database;
 

@@ -1,5 +1,6 @@
 
 import Database from "bun:sqlite";
+
 export type Brew = {
     brew_id: number;
     created_at: string;
@@ -10,7 +11,7 @@ export type Brew = {
 }
 
 export function createDb(dbPath: string) {
-    const db = new Database(dbPath);
+    const db = new Database(dbPath, { create: true, strict: true });
     db.run(
         `CREATE TABLE IF NOT EXISTS brew (
        brew_id INTEGER PRIMARY KEY AUTOINCREMENT, 
